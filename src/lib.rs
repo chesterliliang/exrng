@@ -14,11 +14,12 @@
 //! BE SURE the input are real and good random number
 //! 
 //! simple calling example
+//! ```
 //! let rng_bytes:[u8;32] = [1u8;32];
 //! let mut rng = ExternalRng {rng_bytes,len:32};
 //! let mut zero = [0u8; 32];
 //!  rng.fill_bytes(&mut zero);
-//! 
+//! ```
 //! Here is a reference why we bring up this issue
 //! in crate schnorrkel
 //! Attach a `CryptoRng` to a `SigningTranscript` to repalce the default `ThreadRng`
@@ -27,7 +28,7 @@
 //! however because, although such derandomization produces secure Schnorr
 //! signatures, we do implement protocols here like multi-signatures which
 //! likely become vulnerabile when derandomized.
-//! 
+//! ```
 //! pub fn attach_rng<T,R>(t: T, rng: R) -> SigningTranscriptWithRng<T,R>
 //! where T: SigningTranscript, R: RngCore+CryptoRng
 //! {
@@ -35,9 +36,10 @@
 //!         t, rng: RefCell::new(rng)
 //!     }
 //! }
-//! 
+//! ```
 //! 
 //! example for schnorrkel calling
+//! ```
 //! let trng_bytes = slice::from_raw_parts(random, PUB_KEY_LEN);
 //!	let signature: Signature = keypair.sign(
 //!        attach_rng(
@@ -46,7 +48,7 @@
 //!                rng_bytes:ExternalRng::copy_into_array(trng_bytes),
 //!                len:32}
 //!                ));
-//! 
+//! ```
 #![no_std]
 #![warn(future_incompatible)]
 #![warn(rust_2018_compatibility)]
