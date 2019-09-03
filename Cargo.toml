@@ -1,0 +1,17 @@
+[package]
+name = "exrng"
+version = "0.1.0"
+authors = ["chester <chester@pixelauth.com>"]
+readme = "README.md"
+license = "Apache License 2.0"
+repository = "https://github.com/chesterliliang/exrng.git"
+documentation = "https://docs.rs/exrng"
+keywords = ["rng", "external", "embedded", "arm", "none-os"]
+categories = ["algorithms", "no-std"]
+description = "RNG crate with lan features but using external RNG source"
+exclude = [ ".gitignore", "TESTVECTORS", "res/*" ]
+edition = "2018"
+
+
+[dependencies]
+rand_core = {version = "0.5.1",default-features = false}
