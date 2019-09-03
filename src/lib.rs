@@ -5,11 +5,37 @@
 // Authors:
 // - Chester Li <chester@lichester.com>
 
+//! # exrng
+//! This crate has all features of CryptoRNG and RngCore
+//! But just fill the rng buffer with external 32 bytes input
+//! for platform without RUST rng supported
+//! could saftisfy other crypto crate's need for RNG
+//! so that crate could be compiled
+//! BE SURE the input are real and good random number
+//! 
 //! simple calling example
 //! let rng_bytes:[u8;32] = [1u8;32];
 //! let mut rng = ExternalRng {rng_bytes,len:32};
 //! let mut zero = [0u8; 32];
 //!  rng.fill_bytes(&mut zero);
+//! 
+//! Here is a reference why we bring up this issue
+//! in crate schnorrkel
+//! Attach a `CryptoRng` to a `SigningTranscript` to repalce the default `ThreadRng`
+//! There are tricks like `attach_rng(t,ChaChaRng::from_seed([0u8; 32]))`
+//! for deterministic tests.  We warn against doing this in production
+//! however because, although such derandomization produces secure Schnorr
+//! signatures, we do implement protocols here like multi-signatures which
+//! likely become vulnerabile when derandomized.
+//! 
+//! pub fn attach_rng<T,R>(t: T, rng: R) -> SigningTranscriptWithRng<T,R>
+//! where T: SigningTranscript, R: RngCore+CryptoRng
+//! {
+//!     SigningTranscriptWithRng {
+//!         t, rng: RefCell::new(rng)
+//!     }
+//! }
+//! 
 //! 
 //! example for schnorrkel calling
 //! let trng_bytes = slice::from_raw_parts(random, PUB_KEY_LEN);
