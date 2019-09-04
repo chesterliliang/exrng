@@ -13,13 +13,21 @@
 //! so that crate could be compiled
 //! BE SURE the input are real and good random number
 //! 
-//! simple calling example
+//! ## Simple calling example
 //! ```
-//! let rng_bytes:[u8;32] = [1u8;32];
-//! let mut rng = ExternalRng {rng_bytes,len:32};
-//! let mut zero = [0u8; 32];
-//!  rng.fill_bytes(&mut zero);
+//! # fn main(){
+//!     use exrng::ExternalRng;
+//!     use rand_core::RngCore;
+//! 
+//!     let rng_bytes:[u8;32] = [1u8;32];
+//!     let mut rng = ExternalRng {rng_bytes,len:32};
+//!     let mut zero = [0u8; 32];
+//!     rng.fill_bytes(&mut zero);
+//! #   assert_eq!([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], &zero[..]);
+//! # }
 //! ```
+//! 
+//! ## Reason we build this crate
 //! Here is a reference why we bring up this issue
 //! in crate schnorrkel
 //! Attach a `CryptoRng` to a `SigningTranscript` to repalce the default `ThreadRng`
@@ -29,25 +37,26 @@
 //! signatures, we do implement protocols here like multi-signatures which
 //! likely become vulnerabile when derandomized.
 //! ```
-//! pub fn attach_rng<T,R>(t: T, rng: R) -> SigningTranscriptWithRng<T,R>
-//! where T: SigningTranscript, R: RngCore+CryptoRng
-//! {
-//!     SigningTranscriptWithRng {
-//!         t, rng: RefCell::new(rng)
-//!     }
-//! }
+//! // pub fn attach_rng<T,R>(t: T, rng: R) -> SigningTranscriptWithRng<T,R>
+//! // where T: SigningTranscript, R: RngCore+CryptoRng
+//! // {
+//! //   SigningTranscriptWithRng {
+//! //      t, rng: RefCell::new(rng)
+//! //   }
+//! // }
 //! ```
 //! 
-//! example for schnorrkel calling
+//! ## Example for schnorrkel calling
 //! ```
-//! let trng_bytes = slice::from_raw_parts(random, PUB_KEY_LEN);
-//!	let signature: Signature = keypair.sign(
-//!        attach_rng(
-//!            context.bytes(&message_bytes[..]), 
-//!            exrng::ExternalRng{
-//!                rng_bytes:ExternalRng::copy_into_array(trng_bytes),
-//!                len:32}
-//!                ));
+//! // rand_core = {version="0.4.2"} //!!! must 0.4.x
+//! // let trng_bytes = slice::from_raw_parts(random, PUB_KEY_LEN);
+//!	// let signature: Signature = keypair.sign(
+//! //       attach_rng(
+//! //           context.bytes(&message_bytes[..]), 
+//! //           exrng::ExternalRng{
+//! //               rng_bytes:ExternalRng::copy_into_array(trng_bytes),
+//! //               len:32}
+//! //              ));
 //! ```
 #![no_std]
 #![warn(future_incompatible)]
@@ -59,6 +68,7 @@ use rand_core::{CryptoRng,RngCore};
 
 /// ExternalRng has all features
 /// But use external random source
+#[derive(Clone, Debug)]
 pub struct ExternalRng
 {
     /// bytes to receive external rng when init
@@ -66,6 +76,29 @@ pub struct ExternalRng
     /// lenght of RNG
     pub len: usize
 }
+
+/// implement Trait RngCore for EnternalRng
+/// foucus on fill_bytes
+impl RngCore for ExternalRng
+{
+     #[inline(always)]
+    fn next_u32(&mut self) -> u32 {  panic!()  }
+     #[inline(always)]
+    fn next_u64(&mut self) -> u64 {  panic!()  }
+     #[inline(always)]
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.set_rng(dest); 
+    }
+     #[inline(always)]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), ::rand_core::Error> {
+        self.fill_bytes(dest);
+        Ok(())
+    }
+}
+/// implement Trait CryptoRng for EnternalRng
+/// empty implement
+impl CryptoRng for ExternalRng {}
+
 impl ExternalRng
 {
     /// for fill_bytes to fill rng with bytes in struct element
@@ -112,21 +145,6 @@ impl ExternalRng
     }
 
 }
-
-impl RngCore for ExternalRng {
-    fn next_u32(&mut self) -> u32 {  panic!()  }
-    fn next_u64(&mut self) -> u64 {  panic!()  }
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.set_rng(dest); 
-    }
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), ::rand_core::Error> {
-        self.fill_bytes(dest);
-        Ok(())
-    }
-}
-impl CryptoRng for ExternalRng {}
-
-
 
 #[test]
 fn should_work(){
